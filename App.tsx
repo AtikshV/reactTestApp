@@ -176,15 +176,15 @@ function App(): React.JSX.Element {
       storedName = await getData("name")
       storedPass = await getData("pass")
       console.log("name and pass " + storedName + " " + storedPass);
-      console.log(storedName);
       
 
       if(storedName == null || storedName == undefined || storedName == '') {
         setModalVisible(true)
       } else {
         setCall(true)
-        startRecording(); 
         hangup = false; 
+        recordingStarted = false
+        startRecording(); 
       }
      
     }
@@ -192,7 +192,8 @@ function App(): React.JSX.Element {
   }
 
   const startRecording = async () => {
-    if (recordingStarted || hangup ) { } 
+    if (recordingStarted || hangup ) { console.log("oopsies: " + hangup + recordingStarted);
+    } 
     else {
       recordingStarted=true
       try {
