@@ -313,9 +313,7 @@ function App(): React.JSX.Element {
       <Text style={styles.headingText}>AndyAI</Text>
       <Image
         style={styles.logo}
-        source={{
-          uri: '/Users/atiksh/Documents/Coding/reactTestApp/public/andy.png',
-        }}
+        source={require('./public/andy.png')}
       />
       
       <View style={styles.textInputStyle}>
@@ -334,9 +332,7 @@ function App(): React.JSX.Element {
               <Text style={{color: 'white', fontWeight: 'bold'}}>
               <Image
                 style={styles.tinyLogo}
-                source={{
-                uri: '/Users/atiksh/Documents/Coding/reactTestApp/public/decline.png',
-                }}
+                source={require('./public/decline.png')}
               />
               </Text>
             </TouchableOpacity>
@@ -344,9 +340,7 @@ function App(): React.JSX.Element {
             <TouchableOpacity onPress={() => switcher("start")} style={styles.speak}>
               <Image
                 style={styles.tinyLogo}
-                source={{
-                uri: '/Users/atiksh/Documents/Coding/reactTestApp/public/accept.png',
-                }}
+                source={require('./public/accept.png')}
               />
             </TouchableOpacity>
           )}
@@ -474,7 +468,7 @@ const styles = StyleSheet.create({
   logo: {
     width:300,
     height: 300,
-    resizeMode: 'center',
+    resizeMode: 'contain',
     alignSelf: 'center'
   },
   tinyLogo: {
