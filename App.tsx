@@ -205,7 +205,11 @@ function App(): React.JSX.Element {
         hangup = false; 
         recordingStarted = false
         //TODO: make andy speak first here
-        startRecording(); 
+        data = "Hey I'm Andy! How are you doing today?";
+        setResponse(data);
+        startSpeech();
+
+        //startRecording(); 
       }
      
     }
