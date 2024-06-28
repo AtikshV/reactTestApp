@@ -12,6 +12,8 @@ import type {PropsWithChildren} from 'react';
 
 import Voice, { SpeechEndEvent, SpeechRecognizedEvent, SpeechResultsEvent } from '@react-native-community/voice'; 
 
+// import KeepAwake from 'react-native-keep-awake';
+import KeepAwake, { activateKeepAwake, deactivateKeepAwake } from '@sayem314/react-native-keep-awake';
 
 
 import Tts from 'react-native-tts'
@@ -83,6 +85,17 @@ function Section({children, title}: SectionProps): React.JSX.Element {
     </View>
   );
 }
+
+
+// function changeKeepAwake(shouldBeAwake: boolean) {
+//   if (shouldBeAwake) {
+//     KeepAwake.activate();
+//   } else {
+//     KeepAwake.deactivate();
+//   }
+// }
+
+
 
 var testid:any;
 var testdate:any;
@@ -166,24 +179,32 @@ function App(): React.JSX.Element {
 
     } 
   }
+
+
   
   const switcher = async (stats:String) => {
     if(stats == "stop") {
+      // changeKeepAwake(false) 
+      deactivateKeepAwake();
       setCall(false)
       hangup = true; 
       
     } else {
+      // changeKeepAwake(true)
+      activateKeepAwake(); 
       storedName = await getData("name")
       storedPass = await getData("pass")
       console.log("name and pass " + storedName + " " + storedPass);
+
       
 
       if(storedName == null || storedName == undefined || storedName == '') {
-        setModalVisible(true)
+        setModalVisible(true) // if not signed in 
       } else {
         setCall(true)
         hangup = false; 
         recordingStarted = false
+        //TODO: make andy speak first here
         startRecording(); 
       }
      
@@ -216,6 +237,7 @@ function App(): React.JSX.Element {
 
   const clear = async () => {
     setResult('');
+    setResponse(''); 
     spokenText = ' '
     AsyncStorage.removeItem('name');
     AsyncStorage.removeItem('pass');
@@ -343,6 +365,7 @@ function App(): React.JSX.Element {
                 source={require('./public/accept.png')}
               />
             </TouchableOpacity>
+            
           )}
       </View>
 
