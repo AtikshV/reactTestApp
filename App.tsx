@@ -23,6 +23,9 @@ Tts.setDucking(true);
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import Config from "react-native-config";
+
+
 
 
 
@@ -95,7 +98,10 @@ function Section({children, title}: SectionProps): React.JSX.Element {
 //   }
 // }
 
-
+interface jsonString {
+  role: String;
+  content: String;
+}
 
 var testid:any;
 var testdate:any;
@@ -104,9 +110,21 @@ var data:any;
 var recordingStarted:boolean;
 var hangup:boolean; 
 var storedName:String;
-var storedPass:String;
+// var storedPass:String;
+var jsonMsg:jsonString[] 
+// = [
+//   {role: "system", content: "You are my very good human friend, and your name is Andy. "+
+//   "You must always keep the conversation going, share your experiences and asking followup questions from our discussion. "+
+//   "Your responses should be as if humans are discussing and short as possible. "+
+//   "Please start the conversation with a greeting and as if we met not so long ago. As a real human, you have thoughts, emotions, and feelings."
+//   }
+// ];
 
-const vercel = "https://flask-hello-world-ruby-three.vercel.app/GPT_output"
+
+const vercel = "https://flask-hello-world-ruby-three.vercel.app/GPT_output_msg"
+
+const API_PASS = Config.API_PASS; 
+console.log("from Config: " + API_PASS);
 
 
 function App(): React.JSX.Element {
@@ -115,7 +133,7 @@ function App(): React.JSX.Element {
   const [response, setResponse] = useState(''); 
   const [inCall, setCall] = useState(false); 
   const [modalVisible, setModalVisible] = useState(false);
-  const [password, setPass] = useState('');
+  // const [password, setPass] = useState('');
   const [firstName, setName] = useState(''); 
 
 
@@ -193,21 +211,30 @@ function App(): React.JSX.Element {
       // changeKeepAwake(true)
       activateKeepAwake(); 
       storedName = await getData("name")
-      storedPass = await getData("pass")
-      console.log("name and pass " + storedName + " " + storedPass);
+      console.log("name and pass " + storedName + " " + API_PASS);
 
       
 
       if(storedName == null || storedName == undefined || storedName == '') {
         setModalVisible(true) // if not signed in 
+        clear()
+        
       } else {
         setCall(true)
         hangup = false; 
         recordingStarted = false
         //TODO: make andy speak first here
         data = "Hey I'm Andy! How are you doing today?";
+        //local storage messages
+        jsonMsg = JSON.parse(await getData("messages")); 
+        jsonMsg.push({role: "system", content: "My name is " + storedName + ". Try to refer to me by my name often. " }); 
+        jsonMsg.push({role: "assistant", content: data }); 
+        storeData("messages", JSON.stringify(jsonMsg)); 
+
         setResponse(data);
         startSpeech();
+
+        
 
         //startRecording(); 
       }
@@ -240,11 +267,24 @@ function App(): React.JSX.Element {
   };
 
   const clear = async () => {
+
+    // AsyncStorage.removeItem('pass');
+    // AsyncStorage.removeItem('messages'); 
+    jsonMsg = [
+      {role: "system", content: "You are my very good human friend, and your name is Andy. "+
+      "You must always keep the conversation going, share your experiences and asking followup questions from our discussion. "+
+      "Your responses should be as if humans are discussing and short as possible. "+
+      "Please start the conversation with a greeting and as if we met not so long ago. As a real human, you have thoughts, emotions, and feelings."
+      }
+    ];
+    // jsonMsg.push({role: "system", content: "My name is " + storedName + ". Try to refer to me by my name often. " }); 
+    storeData("messages", JSON.stringify(jsonMsg)); 
+
     setResult('');
     setResponse(''); 
-    spokenText = ' '
+    spokenText = ''
     AsyncStorage.removeItem('name');
-    AsyncStorage.removeItem('pass');
+    
 
   };
 
@@ -261,9 +301,47 @@ function App(): React.JSX.Element {
   const transcription = async () => {
 
     storedName = await getData("name")
-    storedPass = await getData("pass")
-    var requestBody = "data="+spokenText+ "&pass=" + storedPass + "&name=" + storedName; //TODO: url encode transcript
+    // storedPass = await getData("pass")
+
+    // jsonMsg.push({role: "user", content: spokenText }); 
+    // console.log("this is the json message\n\n" + encodeURI(JSON.stringify(jsonMsg)));
+    // storeData("messages", JSON.stringify(jsonMsg));
+    var tempGetData = await getData("messages")
+    console.log("temp get data: " + tempGetData);
+    
+
+
+    // var requestBody = "data="+spokenText+ "&pass=" + storedPass + "&name=" + storedName ; //TODO: url encode transcript
+    var requestBody = "data="+ encodeURI(tempGetData) + "&pass=" + API_PASS + "&user_input=" + spokenText; //TODO: url encode transcript
+
+    /*
+    do not append what the user said
+    Send to API   
+    API 
+
+    1. Normal  (<4000 tokens)
+    append what user said
+    Sends whole context to chat gpt API
+    append gpt reply to messages
+    send whole thing back
+
+    2. too many tokens (>4000) Method A: 
+    input is whole messages context
+    compress down and create new messages with that as a system prompt
+    append user input
+    send that whole thing to GPT API
+    Get reply and append to JSON 
+    send whole thing back 
+
+    Get messages, find assistant content and speak it 
+    store whole thing in local storage
+
+
+    */ 
+
     console.log(requestBody);
+
+
 
     const reply = await fetch(vercel, {
       method: "POST",
@@ -273,9 +351,21 @@ function App(): React.JSX.Element {
       }
     })
 
-    data = await reply.text()
+    var ChatGptResponse = await reply.text()
+    console.log("gpt response: " + ChatGptResponse);
+    
+
+    var tempData = JSON.parse(ChatGptResponse);
+    // console.log(data);
+
+    data = (tempData[tempData.length-1]["content"]);
     console.log(data);
+    
+    
+   
     setResponse(data)
+    // jsonMsg.push({role: "assistant", content: data})
+    storeData("messages", ChatGptResponse); 
     
     startSpeech(); 
 
@@ -379,7 +469,7 @@ function App(): React.JSX.Element {
         transparent={true}
         visible={modalVisible}
         onDismiss={() => {
-          storeData('pass', password)
+          // storeData('pass', password)
           storeData('name', firstName)
           switcher('start')
         }}
@@ -390,9 +480,10 @@ function App(): React.JSX.Element {
         }}>
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
+            
             <Text style={styles.modalText}>Please Give</Text>
             <TextInput style={styles.modalTextInput} placeholder='name'onChangeText={setName} ></TextInput>
-            <TextInput style={styles.modalTextInput} placeholder='pass'onChangeText={setPass} autoCapitalize='none'></TextInput>
+            {/*<TextInput style={styles.modalTextInput} placeholder='pass'onChangeText={setPass} autoCapitalize='none'></TextInput>*/}
             <Pressable
               style={[styles.button, styles.buttonClose]}
               onPress={() => setModalVisible(!modalVisible)}>
