@@ -223,7 +223,7 @@ function App(): React.JSX.Element {
         setCall(true)
         hangup = false; 
         recordingStarted = false
-        //TODO: make andy speak first here
+        //make andy speak first here
         data = "Hey I'm Andy! How are you doing today?";
         //local storage messages
         jsonMsg = JSON.parse(await getData("messages")); 
@@ -311,8 +311,8 @@ function App(): React.JSX.Element {
     
 
 
-    // var requestBody = "data="+spokenText+ "&pass=" + storedPass + "&name=" + storedName ; //TODO: url encode transcript
-    var requestBody = "data="+ encodeURI(tempGetData) + "&pass=" + API_PASS + "&user_input=" + spokenText; //TODO: url encode transcript
+    // var requestBody = "data="+spokenText+ "&pass=" + storedPass + "&name=" + storedName ; //url encode transcript
+    var requestBody = "data="+ encodeURI(tempGetData) + "&pass=" + API_PASS + "&user_input=" + spokenText; //url encode transcript
 
     /*
     do not append what the user said
@@ -432,15 +432,11 @@ function App(): React.JSX.Element {
         source={require('./public/andy.png')}
       />
       
-      <View style={styles.textInputStyle}>
-        <ScrollView>
-          <Text style={{color:'white'}}>{result}</Text>
-        </ScrollView>
+      <View style={{maxHeight: 75 }}>
+        <TextInput style={{color:'white'}} multiline={true} numberOfLines={3} value={result} editable={false} ></TextInput>
       </View>
-      <View style={{height: 50 }}>
-        <ScrollView style={{flexGrow:1}}>
-          <Text style={{color:'white'}}>{response}</Text>
-        </ScrollView>
+      <View style={{maxHeight: 75 }}>
+        <TextInput style={{color:'white'}} multiline={true} numberOfLines={3} value={response} editable={false} ></TextInput>      
       </View>
       <View style={styles.btnContainer}>
       {inCall ? (
@@ -481,13 +477,14 @@ function App(): React.JSX.Element {
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
             
-            <Text style={styles.modalText}>Please Give</Text>
+            <Text style={styles.modalText}>What shall I call you </Text>
             <TextInput style={styles.modalTextInput} placeholder='name'onChangeText={setName} ></TextInput>
+            <Text></Text>
             {/*<TextInput style={styles.modalTextInput} placeholder='pass'onChangeText={setPass} autoCapitalize='none'></TextInput>*/}
             <Pressable
               style={[styles.button, styles.buttonClose]}
               onPress={() => setModalVisible(!modalVisible)}>
-              <Text style={styles.textStyle}>Login</Text>
+              <Text style={styles.textStyle}>Let's Go</Text>
             </Pressable>
           </View>
         </View>
@@ -636,10 +633,17 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textAlign: 'center',
     fontWeight: 'bold',
+    padding: 8,
   },
   modalTextInput: {
     marginBottom: 10,
+    borderColor: '#ddd',
+    borderWidth: 1,
+    borderRadius: 5,
+    backgroundColor: '#ddd',
     textAlign: 'center',
+    width:120,
+    padding:8,
   },
 });
 
